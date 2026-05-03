@@ -682,7 +682,7 @@ namespace Cpu {
 					//? GPU graphs/meters
 					auto width_left = b_width - 10 - (gpus.size() > 9 ? 2 : gpus.size() > 1 ? 1 : 0);
 					if (gpu.supported_functions.temp_info and show_temps) {
-						gpu_temp_graphs[i] = Draw::Graph{ gpu_graph_width, 1, "temp", gpu.temp, graph_symbol, false, false, gpu.temp_max, -23 };
+						gpu_temp_graphs[i] = Draw::Graph{ gpu_graph_width, 1, "temp", gpu.temp, graph_symbol, false, false, gpu.temp_max - 23, -23 };
 						width_left -= 11;
 					}
 					if (gpu.supported_functions.mem_used and gpu.supported_functions.mem_total and b_columns > 1) {
@@ -722,10 +722,10 @@ namespace Cpu {
 
 			if (show_temps) {
 				temp_graphs.clear();
-				temp_graphs.emplace_back(5, 1, "temp", safeVal(cpu.temp, 0), graph_symbol, false, false, safe_cpu_temp_max, -23);
+				temp_graphs.emplace_back(5, 1, "temp", safeVal(cpu.temp, 0), graph_symbol, false, false, safe_cpu_temp_max - 23, -23);
 				if (not hide_cores and b_column_size > 1) {
 					for (const auto& i : iota((size_t)1, cpu.temp.size())) {
-						temp_graphs.emplace_back(5, 1, "temp", safeVal(cpu.temp, i), graph_symbol, false, false, safe_cpu_temp_max, -23);
+						temp_graphs.emplace_back(5, 1, "temp", safeVal(cpu.temp, i), graph_symbol, false, false, safe_cpu_temp_max - 23, -23);
 					}
 				}
 			}
@@ -1065,7 +1065,7 @@ namespace Gpu {
 				gpu_meter = Draw::Meter{b_width - (show_temps ? 25 : 12), "cpu"};
 			}
 			if (gpu.supported_functions.temp_info)
-				temp_graph = Draw::Graph{6, 1, "temp", gpu.temp, graph_symbol, false, false, gpu.temp_max, -23};
+				temp_graph = Draw::Graph{6, 1, "temp", gpu.temp, graph_symbol, false, false, gpu.temp_max - 23, -23};
 			if (gpu.supported_functions.pwr_usage)
 				pwr_meter = Draw::Meter{b_width - (gpu.supported_functions.pwr_state and gpu.pwr_state != 32 ? 25 : 12), "cached"};
 			if (gpu.supported_functions.mem_utilization)
