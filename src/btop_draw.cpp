@@ -655,7 +655,11 @@ namespace Cpu {
 			#endif
 					graphs.resize(1);
 					graph_width = graph_default_width;
-					graphs[0] = Draw::Graph{ graph_width, graph_height, "cpu", safeVal(cpu.cpu_percent, graph_field), graph_symbol, invert, true };
+
+					if (graph_field == "temp")
+						graphs[0] = Draw::Graph{ graph_width, graph_height, "temp", safeVal(cpu.temp, 0), graph_symbol, invert, false, safe_cpu_temp_max - 23, -23 };
+					else
+						graphs[0] = Draw::Graph{ graph_width, graph_height, "cpu", safeVal(cpu.cpu_percent, graph_field), graph_symbol, invert, true };
 			#ifdef GPU_SUPPORT
 				}
 			#endif
@@ -809,7 +813,10 @@ namespace Cpu {
 				(void)graph_height;
 				(void)graph_width;
 			#endif
-					out += graphs[0](safeVal(cpu.cpu_percent, graph_field), (data_same or redraw));
+					if (graph_field == "temp")
+						out += graphs[0](safeVal(cpu.temp, 0), (data_same or redraw));
+					else
+						out += graphs[0](safeVal(cpu.cpu_percent, graph_field), (data_same or redraw));
 			};
 
 			draw_graphs(graphs_upper, graph_up_height, graph_up_width, graph_up_field);

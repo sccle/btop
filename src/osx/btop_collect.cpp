@@ -707,6 +707,7 @@ namespace Shared {
 		}
 		Cpu::cpuName = Cpu::get_cpuName();
 		Cpu::got_sensors = Cpu::get_sensors();
+		if (Cpu::got_sensors) Cpu::available_fields.push_back("temp");
 		Cpu::core_mapping = Cpu::get_core_mapping();
 
 		//? Init for namespace Gpu
@@ -825,8 +826,6 @@ namespace Cpu {
 				ThermalSensors sensors;
 				std::vector<long long> core_temps;
 				current_cpu.temp.at(0).push_back(sensors.getSensors(core_temps));
-				if (current_cpu.temp.at(0).size() > 20)
-					current_cpu.temp.at(0).pop_front();
 				cpu_temp_only = core_temps.empty();
 
 				if (Config::getB("show_coretemp") and not core_temps.empty()) {
@@ -1077,8 +1076,14 @@ namespace Cpu {
 			}
 		}
 
-		if (Config::getB("check_temp") and got_sensors)
+		if (Config::getB("check_temp") and got_sensors) {
 			update_sensors();
+		} else if (got_sensors) {
+			current_cpu.temp.at(0).push_back(0);
+		}
+
+		//? Reduce size if there are more values than needed for graph
+		while (cmp_greater(cpu.temp.at(0).size(), width * 2)) cpu.temp.at(0).pop_front();
 
 		if (Config::getB("show_battery") and has_battery)
 			current_bat = get_battery();
