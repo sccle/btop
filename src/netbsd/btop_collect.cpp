@@ -631,8 +631,6 @@ namespace Cpu {
 
 namespace Mem {
 	bool has_swap = false;
-	vector<string> fstab;
-	fs::file_time_type fstab_time;
 	int disk_ios = 0;
 	vector<string> last_found;
 
@@ -760,7 +758,7 @@ namespace Mem {
 			double uptime = system_uptime();
 			auto &disks_filter = Config::getS("disks_filter");
 			bool filter_exclude = false;
-			// auto only_physical = Config::getB("only_physical");
+			const auto only_physical = Config::getB("only_physical");
 			auto &disks = mem.disks;
 			vector<string> filter;
 			if (not disks_filter.empty()) {
@@ -776,17 +774,15 @@ namespace Mem {
 			vector<string> found;
 			found.reserve(last_found.size());
 			for (int i = 0; i < count; i++) {
-				auto fstype = string(stvfs[i].f_fstypename);
-				if (fstype == "autofs" || fstype == "devfs" || fstype == "linprocfs" || fstype == "procfs" || fstype == "tmpfs" || fstype == "linsysfs" ||
-					fstype == "fdesckfs") {
-					// in memory filesystems -> not useful to show
+				string_view fstype = stvfs[i].f_fstypename;
+				string_view dev = stvfs[i].f_mntfromname;
+				//? root_device: the kernel name for / until rc.d/root remounts it from fstab
+				if (only_physical and not dev.starts_with("/dev/") and dev != "root_device" and fstype != "zfs")
 					continue;
-				}
 
 				std::error_code ec;
 				string mountpoint = stvfs[i].f_mntonname;
-				string dev = stvfs[i].f_mntfromname;
-				mapping[dev] = mountpoint;
+				mapping[string(dev)] = mountpoint;
 
 				//? Match filter if not empty
 				if (not filter.empty()) {
@@ -1386,6 +1382,9 @@ namespace Proc {
 
 			//? Stable sort to retain selected sorting among processes with the same parent
 			rng::stable_sort(current_procs, rng::less{}, & proc_info::ppid);
+
+			//? Auto-collapse processes with many children when entering tree mode
+			_auto_collapse_oversized(current_procs, tree_mode_change);
 
 			//? Start recursive iteration over processes with the lowest shared parent pids
 			for (auto& p : rng::equal_range(current_procs, current_procs.at(0).ppid, rng::less{}, &proc_info::ppid)) {
